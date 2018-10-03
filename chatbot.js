@@ -15,14 +15,26 @@ var STAMP_SIZE = 50;
 var STAMP_PER_USER = 4;
 
 setInterval(function () {
-    var lgs = document.getElementsByClassName("lg");
+    var stamps = document.getElementsByClassName("stamp");
     var now = new Date().getTime();
-    for (var i = 0; i < lgs.length; i++) {
-        if ((now - lgs[i].getAttribute("data-added-time")) >= 300000) {
-            lgs[i].remove();
+    for (var i = 0; i < stamps.length; i++) {
+        if ((now - stamps[i].getAttribute("data-added-time")) >= 300000) {
+          stamps[i].remove();
         }
     }
 }, 100);
+
+setInterval(function () {
+    var stamps = document.getElementsByClassName("stamp");
+    for (var i = 0; i < stamps.length; i++) {
+
+//      var top = $(stamps[i]).offset().top + 1;
+//      var left = $(stamps[i]).offset().left + 1;
+      var top = $(stamps[i]).offset().top + (1 - getRandomInt(0, 3));
+      var left = $(stamps[i]).offset().left + (1 - getRandomInt(0, 3));
+      $(stamps[i]).offset({top: top, left: left})
+    }
+}, 10);
 
 var chatClient = function chatClient(options) {
     this.username = options.username;
@@ -54,12 +66,38 @@ chatClient.prototype.onMessage = function onMessage(message) {
         var parsed = this.parseMessage(message.data);
         if (parsed !== null) {
             if (parsed.command === "PRIVMSG") {
-
-                if (parsed.message.startsWith("!lovegori") ||
-                    parsed.message.startsWith("!lg") ||
-                    !isNaN(parsed.message.trim()) ||
-                    isCordinateStr(parsed.message.trim())
+                if (parsed.message.startsWith("!lg") ||
+                parsed.message.startsWith("!haruki") ||
+                parsed.message.startsWith("!koge") ||
+                parsed.message.startsWith("!haha") ||
+                isCordinateStr(parsed.message) ||
+                !isNaN(parsed.message)
                 ) {
+                    var stampname;
+                    if (parsed.message.charAt(0) === '!') {
+                      var firstSpace = parsed.message.indexOf(' ');
+                      if (firstSpace === -1) {
+                        stampname = parsed.message.slice(1);
+                      } else {
+                        stampname = parsed.message.substring(1, parsed.message.indexOf(' '));
+                      }
+                    } else {
+                      var rand = getRandomInt(0, 4);
+                      if (rand === 0) {
+                        stampname = "lg";
+                      } else if (rand === 1) {
+                        stampname = "haruki";
+                      } else if (rand === 2) {
+                        stampname = "haha";
+                      } else {
+                        stampname = "koge";
+                      }
+                    }
+                    // "!lg 100 200" -> "100 200"
+                    // "!haruki 100 200" -> "100 200"
+                    parsed.message = parsed.message.slice(parsed.message.indexOf(' '));
+
+
                     x = NaN;
                     y = NaN;
                     if (!isNaN(parsed.message.trim())) {
@@ -77,7 +115,7 @@ chatClient.prototype.onMessage = function onMessage(message) {
                     console.log(x);
                     console.log(y);
                     putStamp(parsed.username,
-                        'lovegorilla',
+                        stampname,
                         x - STAMP_SIZE / 2, y - STAMP_SIZE / 2
                     )
                 }
@@ -120,13 +158,13 @@ function isCordinateStr(str) {
 };
 
 function deleteIfExists(username) {
-    var lgs = document.getElementsByClassName("lg");
+    var stamps = document.getElementsByClassName("stamp");
     var cnt = 0;
-    for (var i = lgs.length - 1; i >= 0; i--) {
-        if (username === lgs[i].getAttribute("data-username")) {
+    for (var i = stamps.length - 1; i >= 0; i--) {
+        if (username === stamps[i].getAttribute("data-username")) {
             cnt++;
             if (cnt >= STAMP_PER_USER) {
-                lgs[i].remove();
+                stamps[i].remove();
                 return true;
             }
         }
@@ -140,13 +178,13 @@ function putStamp(username, stampname, x, y) {
     var containerStyle = 'position: absolute; top: ' + y + 'px; left: ' + x + 'px';
     var now = new Date().getTime();
     stampContainer.setAttribute('style', containerStyle);
-    stampContainer.setAttribute('class', 'lg');
+    stampContainer.setAttribute('class', 'stamp');
     stampContainer.setAttribute('data-username', username);
     stampContainer.setAttribute('data-added-time', now);
 
     var img = document.createElement('img');
     img.setAttribute('style', 'width: ' + STAMP_SIZE + 'px; heigt: ' + STAMP_SIZE + 'px;');
-    img.setAttribute('src', './lovegorilla.png');
+    img.setAttribute('src', './' + stampname + '.png');
 
     var span = document.createElement("span");
     var spanstyle = 'position: absolute; top: 0px; left: 75px;'
